@@ -7,6 +7,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { EmailService } from 'src/common/services/email.service';
 import { CacheService } from 'src/common/services/cache.service';
 import { OtpService } from './services/otp.service';
+import { CacheModule } from '@nestjs/cache-manager';
 import { ConfigService } from '@nestjs/config';
 
 @Module({
@@ -18,6 +19,7 @@ import { ConfigService } from '@nestjs/config';
                 secret: config.get('JWT_SECRET'),
             })
         }),
+        CacheModule.register(),
     ],
     controllers: [AuthController],
     providers: [

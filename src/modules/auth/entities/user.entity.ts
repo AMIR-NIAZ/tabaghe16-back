@@ -20,5 +20,5 @@ export class User extends BaseEntity {
     refreshToken?: string;
 
     @Column({ default: false })
-    is_active: boolean;
+    is_verified: boolean;
 }

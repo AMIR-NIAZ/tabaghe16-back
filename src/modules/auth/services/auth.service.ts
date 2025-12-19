@@ -17,19 +17,18 @@ export class AuthService {
         private readonly jwtService: JwtService
     ) { }
 
-    async register(dto: CreateUserDto, id) {
+    async activateAccount(dto: CreateUserDto, id) {
         const { name, password } = dto;
-
+ 
         const user = await this.userRepository.findOneBy({ id })
-
         if (!user) throw new BadRequestException("کاربر پیدا نشد")
-        if (user.is_active) throw new BadRequestException("این کاربر قبلاً فعال شده");
+        if (!user.is_verified) throw new BadRequestException("ایمیل کاربر تایید نشده");
 
-        await this.userRepository.update(id ,{
+        await this.userRepository.update(id, {
             name,
             password
         })
-        
+
         const newUser = await this.userRepository.findOneBy({ id });
         if (!newUser) throw new BadRequestException("مشکلی به وجود آمده است")
 
@@ -42,10 +41,11 @@ export class AuthService {
 
     async login(dto: LoginUserDto) {
         const { email, password } = dto;
-
+        
         const user = await this.userRepository.findOneBy({ email });
         if (!user) throw new NotFoundException("یوزری با این ایمیل پیدا نشد!");
-
+        if (!user.is_verified) throw new UnauthorizedException("ابتدا ایمیل خود را تایید کنید");
+        
         const isPasswordValidation = await compare(password, user.password);
         if (!isPasswordValidation) throw new UnauthorizedException("پسوورد صحیح نمیباشد");
 
@@ -60,9 +60,7 @@ export class AuthService {
     async refreshToken(dto: RefreshtokenDto) {
         const { refresh_token } = dto;
         try {
-            const payLoad = this.jwtService.verify<PayloadRefresh>(refresh_token, {
-                secret: process.env.JWT_SECRET
-            });
+            const payLoad = await this.jwtService.verifyAsync<PayloadRefresh>(refresh_token);
 
             const user = await this.userRepository.findOneBy({ id: payLoad.sub })
             if (!user) throw new UnauthorizedException("توکن معتبر نمیباشد");
@@ -81,13 +79,12 @@ export class AuthService {
     async checkEmail(email: string) {
         const existsUser = await this.userRepository.findOne({ where: { email } });
         if (existsUser) throw new BadRequestException('کاربری با این ایمیل وجود دارد');
-
     }
 
-    async createPendingUser(email: string) {
+    async createUser(email: string) {
         const user = this.userRepository.create({
             email,
-            is_active: false,
+            is_verified: true,
         });
 
         return this.userRepository.save(user);
@@ -105,11 +102,9 @@ export class AuthService {
 
         const accessToken = this.jwtService.sign(payloadAccess, {
             expiresIn: "10m",
-            secret: process.env.JWT_SECRET
         })
         const refreshToken = this.jwtService.sign(payloadRefresh, {
             expiresIn: "25d",
-            secret: process.env.JWT_SECRET
         });
 
         return { accessToken, refreshToken };

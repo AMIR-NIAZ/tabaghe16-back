@@ -14,11 +14,13 @@ export class RgisterGuard implements CanActivate {
 
         try {
             const payload = await this.jwtService.verifyAsync(token);
+            
             request['user'] = payload;
+
         } catch (error) {
             throw new UnauthorizedException("توکن نا معتبر میباشد");
         }
-        
+
         return true
     }
 
