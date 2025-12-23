@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -78,7 +78,7 @@ export class AuthService {
 
     async checkEmail(email: string) {
         const existsUser = await this.userRepository.findOne({ where: { email } });
-        if (existsUser) throw new BadRequestException('کاربری با این ایمیل وجود دارد');
+        if (existsUser) throw new ConflictException('کاربری با این ایمیل وجود دارد');
     }
 
     async createUser(email: string) {

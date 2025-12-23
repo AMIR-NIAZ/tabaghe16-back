@@ -1,14 +1,11 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { SendEmailDto } from "../dto/send-email.dto";
 import { EmailService } from "src/common/services/email.service";
 import { CacheService } from "src/common/services/cache.service";
 import { OtpCodeDto } from "../dto/otp-code.dto";
 import { hash, compare } from 'bcrypt';
 import { JwtService } from "@nestjs/jwt";
-import { Repository } from "typeorm";
-import { User } from "../entities/user.entity";
 import { AuthService } from "./auth.service";
-
 
 @Injectable()
 export class OtpService {
@@ -30,7 +27,7 @@ export class OtpService {
 
         const hashedCode = await hash(otp, 10);
 
-        await this.cacheService.set(`email:${email}`, hashedCode, 100)
+        await this.cacheService.set(`email:${email}`, hashedCode, 120)
 
         return { message: "کد با موفقیت ارسال شد" }
     }
@@ -46,16 +43,15 @@ export class OtpService {
 
         await this.cacheService.del(`email:${email}`);
 
-        const user = await this.authService.createPendingUser(email)
+        const user = await this.authService.createUser(email)
 
         const token = this.jwtService.sign(
             { user_id: user.id },
             {
                 expiresIn: "10m",
-                secret: process.env.JWT_SECRET,
             }
         );
 
-        return { message: "کد تایید شد", token }
+        return { message: "کد درست میباشد", token }
     }
 }

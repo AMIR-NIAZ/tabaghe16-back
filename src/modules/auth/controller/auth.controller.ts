@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Put, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from '../services/auth.service';
 import { HashPasswordPipe } from 'src/common/pipes/hash-password.pipe';
 import { CreateUserDto } from '../dto/create-user.dto';
@@ -19,10 +19,12 @@ export class AuthController {
 
     @Post('send-otp')
     @IsPublic()
+    @HttpCode(200)
     async sendEmail(@Body() dto: SendEmailDto) {
         return this.otpService.sendEmail(dto)
     }
 
+    @HttpCode(200)
     @Post('verify-otp')
     @IsPublic()
     async verifyOtp(@Body() dto: OtpCodeDto) {
@@ -30,10 +32,10 @@ export class AuthController {
     }
 
     @UseGuards(RgisterGuard)
-    @Post('rgister')
+    @Put('active')
     @IsPublic()
     async register(@Body(HashPasswordPipe) dto: CreateUserDto, @Req() req) {
-        return await this.authService.register(dto, req.user.user_id);
+        return await this.authService.activateAccount(dto, req.user.user_id);
     }
 
     @Post('login')

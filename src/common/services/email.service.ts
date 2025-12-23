@@ -63,7 +63,7 @@ export class EmailService {
             return otpCode;
         } catch (err) {
             console.log(err);
-            throw new BadRequestException("ارسال ایمیل با مشکل مواجه شد");
+            throw new BadRequestException("ارسال ایمیل به مشکل مواجه شد");
         }
     }
 
